@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.50 (Windows - x64)">
+  <section name="config">
+    <options closefiles="1" openmode="0" name="cli-ls"/>
+  </section>
+  <section name="data">
+    <explorer view="C:\Program Files\PureBasic\Examples\" pattern="0"/>
+    <log show="1"/>
+    <lastopen date="2017-09-27 11:57" user="Herwin" host="DESKTOP-UAKS81M"/>
+  </section>
+  <section name="files">
+    <file name="ls.pb">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
+      <fingerprint md5="b63eca3403eb4fd6381ec87b8069bff7"/>
+    </file>
+  </section>
+  <section name="targets">
+    <target name="Default Target" enabled="1" default="1">
+      <inputfile value=".\ls.pb"/>
+      <outputfile value="..\bin\x64\ls.exe"/>
+      <compiler version="PureBasic 5.50 (Windows - x64)"/>
+      <options xpskin="1" debug="1"/>
+      <temporaryexe value="source"/>
+      <format exe="console" cpu="0"/>
+      <compilecount enable="1" value="56"/>
+      <buildcount enable="1" value="0"/>
+      <constants>
+        <constant value="#PB_FUCK" enable="1"/>
+      </constants>
+    </target>
+  </section>
+</project>
