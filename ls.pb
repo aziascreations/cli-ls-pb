@@ -1,6 +1,9 @@
 ﻿;
 ;-- Setup --
 ;
+
+; TODO: Le PrintHelpText() a une longue pause et ne quitte pas.
+
 OpenConsole()
 
 XIncludeFile "cli-args-pb\cli-args.pb"
@@ -32,7 +35,8 @@ RegisterLongOption("version", "Output version information and exit", #ARGV_NONE)
 #SectionSpacing = 2
 #MonthStr = "JanFebMarAprMayJunJulAugSepOctNovDec"
 #ExecRegex = "^(bat|c(md|om|pl)|exe|gadget|i(ns|ns|su)|j(ob|se)|ms[cipt]|p(if|af|s1)|r(eg|gs)|s(ct|hh|hs)|u3p|vb(e|s(cript)?)?|wsf?)$"
-
+#FileSizeUnitBasic = "B  KB MB GB TB PB EB ZB YB "
+#FileSizeUnitKibib = "B  KiBMiBGiBTiBPiBEiBZiBYiB"
 
 ; Flag variables
 ; 0 if recursion is disabled use another value for testing to avoid the .git folder and subfolders in reursive mode.
@@ -49,9 +53,10 @@ Global DebugMode.b = #False	 ; -d/--debug thingy
 ; 1 - Commas separated list
 ; 2 - Pretty / list
 Global DirectoryDisplayMode.b = 0; -c/-l thingy
-Global UseKibibytes.b = #False
 
-;Global UsePrettyPrint.b = #True ; -l option switch
+; Couldn't find a better way to do it...
+Global UseKibibytes.b = #False
+Global FileSizeDivider.i = 1000
 
 
 ; Other variables & stuff
@@ -82,6 +87,24 @@ EndIf
 ;
 ;---- Name Printers ----
 ;
+Procedure.s GetFormattedSize(FileSize.i)
+	UnitSizeIndex.b = 0
+	;FileSizeDivider
+	
+	While FileSize >= FileSizeDivider
+		UnitSizeIndex = UnitSizeIndex + 1
+		FileSize = FileSize / FileSizeDivider
+	Wend
+	
+	If UseKibibytes
+		ProcedureReturn Str(FileSize) + " " + RTrim(Mid(#FileSizeUnitKibib, UnitSizeIndex*3+1, 3))
+	Else
+		ProcedureReturn Str(FileSize) + " " + RTrim(Mid(#FileSizeUnitBasic, UnitSizeIndex*3+1, 3))
+	EndIf
+	
+	ProcedureReturn "ERROR"
+EndProcedure
+
 Procedure PrintFormattedName(FileName.s, Extension.s, FileType.i, Spacing.i=-1)
 	If Spacing > 0
 		; Add spaces and shit
@@ -141,10 +164,14 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 	MaxSizeLength.b = 0
 	
 	ForEach Entries()
-		; TODO: Check length with -F option (KB, KiB, ...)
-		If Len(StrU(Entries()\Size)) > MaxSizeLength
-			MaxSizeLength = Len(StrU(Entries()\Size))
-			; Debug Entries()\Name + " -> " + Entries()\Size + " -> "+ Str(Entries()\Size)
+		If UseHumanFileSize
+			If Len(GetFormattedSize(Entries()\Size)) > MaxSizeLength
+				MaxSizeLength = Len(StrU(Entries()\Size))
+			EndIf
+		Else
+			If Len(StrU(Entries()\Size)) > MaxSizeLength
+				MaxSizeLength = Len(StrU(Entries()\Size))
+			EndIf
 		EndIf
 	Next
 	
@@ -180,11 +207,19 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 			Print("-")
 		EndIf
 		
+		; TODO: Seems to make a spacing of 1 between the flag and size section if kibibytes are used
 		; Size Section
-		For i=1 To MaxSizeLength - Len(Str(Entries()\Size)) + #SectionSpacing
-			Print(" ")
-		Next
-		Print(Str(Entries()\Size))
+		If UseHumanFileSize
+			For i=1 To MaxSizeLength - Len(GetFormattedSize(Entries()\Size)) + #SectionSpacing
+				Print(" ")
+			Next
+			Print(GetFormattedSize(Entries()\Size))
+		Else
+			For i=1 To MaxSizeLength - Len(Str(Entries()\Size)) + #SectionSpacing
+				Print(" ")
+			Next
+			Print(Str(Entries()\Size))
+		EndIf
 		
 		For i=1 To #SectionSpacing
 			Print(" ")
@@ -313,6 +348,7 @@ Debug "Arguments parsed !"
 Debug "Reading arguments"
 If IsOptionUsed("help")
 	PrintHelpText()
+	End
 EndIf
 
 ; File hidding stuff
@@ -338,6 +374,7 @@ If IsOptionUsed("h")
 EndIf
 If IsOptionUsed("k")
 	UseKibibytes = #True
+	FileSizeDivider = 1024
 EndIf
 
 If IsOptionUsed("l")
@@ -346,7 +383,7 @@ ElseIf IsOptionUsed("m")
 	DirectoryDisplayMode = 1
 EndIf
 
-If IsOptionUsed("")
+If IsOptionUsed("R")
 	MaxRecursionDepth = 9999
 EndIf
 Debug "Arguments read !"
@@ -357,7 +394,7 @@ ProcessDirectory(".\", 0)
 ;name$=Input()
 
 ; IDE Options = PureBasic 5.50 (Windows - x64)
-; CursorPosition = 354
-; FirstLine = 332
+; CursorPosition = 385
+; FirstLine = 366
 ; Folding = -
 ; EnableXP
