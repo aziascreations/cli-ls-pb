@@ -1,17 +1,20 @@
 ﻿;
-;-- Setup --
+;- Setup
 ;
 
-; TODO: Le PrintHelpText() a une longue pause et ne quitte pas.
-
-OpenConsole()
+If Not OpenConsole()
+	;TODO: Play error sound ?
+	End 1	
+EndIf
 
 XIncludeFile "cli-args-pb\cli-args.pb"
 
 ;TODO: Fix the desc. for a and A.
 RegisterCompleteOption('a', "all", "Do not ignore hidden entries and/or entries starting with .", #ARGV_NONE)
 RegisterCompleteOption('A', "almost-all", "Do not ignore hidden entries and do not list implied . and ..", #ARGV_NONE)
-RegisterCompleteOption('d', "debug", "Display some debugging informations and exit", #ARGV_NONE)
+RegisterLongOption("debug", "Display some debugging informations and exit", #ARGV_NONE)
+RegisterShortOption('d', "Sorts directory content by putting the folders on top/at the beginning", #ARGV_NONE)
+RegisterShortOption('D', "Sorts directory content by putting the folders at the bottom/at the end", #ARGV_NONE)
 RegisterCompleteOption('F', "classify", "Append indicator (one of */=>@|) to entries", #ARGV_NONE)
 RegisterCompleteOption('h', "human-readable", "With -l and/or -s, print human readable sizes (e.g., 1kB 234MB 2GB)", #ARGV_NONE)
 RegisterCompleteOption('k', "kibibytes", "With -l and/or -s, default to 1024-byte blocks for disk usage and print ", #ARGV_NONE)
@@ -26,9 +29,8 @@ RegisterLongOption("show-control-chars", "TEMP: Used to prevent some aliases err
 RegisterLongOption("help", "Display this help and exit", #ARGV_NONE)
 RegisterLongOption("version", "Output version information and exit", #ARGV_NONE)
 
-
 ;
-;-- Variables Setup --
+;- Variables Setup
 ;
 
 ; Constants
@@ -49,15 +51,18 @@ Global AddExtraFileTypeStuff = #False ; -F option switch
 ; 2(a) -> All
 Global FileHiddingMode.b = 0 ; -a and -A thingy
 Global DebugMode.b = #False	 ; -d/--debug thingy
+
 ; 0 - Simple list(default)
 ; 1 - Commas separated list
 ; 2 - Pretty / list
 Global DirectoryDisplayMode.b = 0; -c/-l thingy
 
+; The #PB_DirectoryEntry constants will be used to set this variable
+Global DirectorySortingMode.b = %00; -d/-D flag
+
 ; Couldn't find a better way to do it...
 Global UseKibibytes.b = #False
 Global FileSizeDivider.i = 1000
-
 
 ; Other variables & stuff
 Global StepCounter.i = 12
@@ -83,10 +88,9 @@ EndIf
 
 
 ;
-;-- Procedures --
+;- Procedures
 ;
-;---- Name Printers ----
-;
+
 Procedure.s GetFormattedSize(FileSize.i)
 	UnitSizeIndex.b = 0
 	;FileSizeDivider
@@ -145,18 +149,18 @@ Procedure PrintFormattedName(FileName.s, Extension.s, FileType.i, Spacing.i=-1)
 EndProcedure
 
 Procedure PrintBasicDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry(), LongestName.i)
-	
+	; Unable to find a way to get the terminal size.
+	PrintN("Please use the -l option")
 EndProcedure
 
 Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
-	;Debug "Pretty printing start"
-	
+	;
 	; Printing current path if recursive mode is enabled
 	; La condition après le AND est peut-être inutile
-	If MaxRecursionDepth > 0 And CurrentDepth > 0
+	If CurrentDepth > 0 ;And MaxRecursionDepth > 0
 		PrintN("")
 		ConsoleColor(3, 0)
-		PrintN(""+Path+":")	
+		PrintN(Path+":")	
 		ConsoleColor(15, 0)
 	EndIf
 	
@@ -175,9 +179,6 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 		EndIf
 	Next
 	
-	;Debug "Max: "+MaxSizeLength
-	
-	; This is a temporary solution, I will clean this up later
 	ForEach Entries()
 		; Flags section
 		If Entries()\Type & #PB_DirectoryEntry_Directory
@@ -185,7 +186,6 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 		Else
 			Print(" -")
 		EndIf
-		
 		If Entries()\Flags & #PB_FileSystem_Archive
 			Print("a")
 		Else
@@ -210,40 +210,26 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 		; TODO: Seems to make a spacing of 1 between the flag and size section if kibibytes are used
 		; Size Section
 		If UseHumanFileSize
-			For i=1 To MaxSizeLength - Len(GetFormattedSize(Entries()\Size)) + #SectionSpacing
-				Print(" ")
-			Next
+			Print(Space(MaxSizeLength - Len(GetFormattedSize(Entries()\Size)) + #SectionSpacing))
 			Print(GetFormattedSize(Entries()\Size))
 		Else
-			For i=1 To MaxSizeLength - Len(Str(Entries()\Size)) + #SectionSpacing
-				Print(" ")
-			Next
+			Print(Space(MaxSizeLength - Len(Str(Entries()\Size)) + #SectionSpacing))
 			Print(Str(Entries()\Size))
 		EndIf
 		
-		For i=1 To #SectionSpacing
-			Print(" ")
-		Next
-		
 		; Modification date section
+		Print(Space(#SectionSpacing))
 		Print(Mid(#MonthStr, (Month(Entries()\Date)-1)*3+1, 3)+" "+FormatDate("%dd", Entries()\Date))
-		For i=1 To #SectionSpacing
-			Print(" ")
-		Next
-		Print(FormatDate("%hh:%mm", Entries()\Date))
+		Print(Space(#SectionSpacing) + FormatDate("%hh:%mm", Entries()\Date))
 		
 		;File name section
-		For i=1 To #SectionSpacing
-			Print(" ")
-		Next
+		Print(Space(#SectionSpacing))
 		PrintFormattedName(Entries()\Name, Entries()\Extension, Entries()\Type)
 	Next
-	
-	;Debug "Pretty printing end"
 EndProcedure
 
 ;
-;---- Others ----
+;- Others
 ;
 
 Procedure ProcessDirectory(Path.s, CurrentDepth.i)
@@ -252,10 +238,16 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i)
 		ProcedureReturn
 	EndIf
 	
-	;Debug "Preparing variables"
+	Define *ListPointer.DirEntry
+	
+	; Used to store files or directories if -d or -D is used to add it to Entries() later.
+	NewList AltEntries.DirEntry()
 	NewList Entries.DirEntry()
+	
 	CurrentId.i = StepCounter
 	StepCounter = StepCounter + 1
+	
+	; TODO: Might be useless if formatted names are used  with basic printing...
 	LongestName.i = 0
 	
 	Debug "Current ID: "+CurrentId
@@ -285,25 +277,46 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i)
 				EndIf
 			EndIf
 			
-			AddElement(Entries())
-			Entries()\Name = DirectoryEntryName(CurrentId)
-			Entries()\Type = DirectoryEntryType(CurrentId)
-			Entries()\Flags = DirectoryEntryAttributes(CurrentId)
-			Entries()\Size = DirectoryEntrySize(CurrentId)
-			Entries()\Date = DirectoryEntryDate(CurrentId, #PB_Date_Modified)
-			
-			If Entries()\Type & #PB_DirectoryEntry_Directory
-				Entries()\Extension = ""
+			; If -d is used and the entry is a directory or if -D is used and the entry is a file, Entries() will be used.
+			; If neither -d or -D was used, will always be used 
+			If Not DirectorySortingMode Or (DirectorySortingMode & #PB_DirectoryEntry_Directory And DirectoryEntryType(CurrentId) & #PB_DirectoryEntry_Directory) Or (DirectorySortingMode & #PB_DirectoryEntry_File And DirectoryEntryType(CurrentId) & #PB_DirectoryEntry_File)
+				AddElement(Entries())
+				*ListPointer = @Entries()
 			Else
-				Entries()\Extension = GetExtensionPart(Entries()\Name)
+				AddElement(AltEntries())
+				*ListPointer = @AltEntries()
 			EndIf
 			
-			If Len(Entries()\Name) > LongestName
-				LongestName = Len(Entries()\Name)
+			*ListPointer\Name = DirectoryEntryName(CurrentId)
+			*ListPointer\Type = DirectoryEntryType(CurrentId)
+			*ListPointer\Flags = DirectoryEntryAttributes(CurrentId)
+			*ListPointer\Size = DirectoryEntrySize(CurrentId)
+			*ListPointer\Date = DirectoryEntryDate(CurrentId, #PB_Date_Modified)
+			
+			; TODO: use the GetExtensionPart() procedure on directories and ignore it later when not needed.
+			If *ListPointer\Type & #PB_DirectoryEntry_Directory
+				*ListPointer\Extension = ""
+			Else
+				*ListPointer\Extension = GetExtensionPart(*ListPointer\Name)
+			EndIf
+			
+			If Len(*ListPointer\Name) > LongestName
+				LongestName = Len(*ListPointer\Name)
 			EndIf
 		Wend
+		
 		;Debug "Finished examining..."
 		FinishDirectory(CurrentId)
+		
+		; Sorting directory's entries
+		If ListSize(AltEntries()) > 0
+			Debug "Combining lists"
+			ForEach AltEntries()
+				AddElement(Entries())
+				Entries() = AltEntries()
+			Next
+		EndIf
+		FreeList(AltEntries())
 		
 		; Printing directory's content
 		If DirectoryDisplayMode = 2
@@ -322,7 +335,6 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i)
 				Debug Entries()\Name
 			Next
 		EndIf
-		
 	Else
 		Debug "Unable to examine "+Path
 		If CurrentDepth = 0
@@ -332,13 +344,11 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i)
 		EndIf
 	EndIf
 	
-	;Debug "Freeing list..."
 	FreeList(Entries())
-	Debug "Done"
 EndProcedure
 
 ;
-;-- IDK --
+;- IDK 
 ;
 
 Debug "Parsing arguments..."
@@ -348,6 +358,9 @@ Debug "Arguments parsed !"
 Debug "Reading arguments"
 If IsOptionUsed("help")
 	PrintHelpText()
+	End
+ElseIf IsOptionUsed("version")
+	PrintN("cli-ls v"+#PB_Editor_FileVersionNumeric+" x64 - ("+FormatDate("%dd/%mm/%yyyy %hh:%ii:%ss GMT", #PB_Compiler_Date)+")")
 	End
 EndIf
 
@@ -383,7 +396,14 @@ ElseIf IsOptionUsed("m")
 	DirectoryDisplayMode = 1
 EndIf
 
+If IsOptionUsed("d")
+	DirectorySortingMode = #PB_DirectoryEntry_Directory
+ElseIf IsOptionUsed("D")
+	DirectorySortingMode = #PB_DirectoryEntry_File
+EndIf
+
 If IsOptionUsed("R")
+	; 500 should be enough with the 260 path length limit on windows but I let it at 9999 to be safe in the future.
 	MaxRecursionDepth = 9999
 EndIf
 Debug "Arguments read !"
@@ -394,7 +414,7 @@ ProcessDirectory(".\", 0)
 ;name$=Input()
 
 ; IDE Options = PureBasic 5.50 (Windows - x64)
-; CursorPosition = 385
-; FirstLine = 366
+; CursorPosition = 362
+; FirstLine = 348
 ; Folding = -
 ; EnableXP
