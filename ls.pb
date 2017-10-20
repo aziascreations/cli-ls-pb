@@ -4,30 +4,30 @@
 
 If Not OpenConsole()
 	;TODO: Play error sound ?
-	End 1	
+	End 1
 EndIf
 
 XIncludeFile "cli-args-pb\cli-args.pb"
 
 ;TODO: Fix the desc. for a and A.
-RegisterCompleteOption('a', "all", "Do not ignore hidden entries and/or entries starting with .", #ARGV_NONE)
-RegisterCompleteOption('A', "almost-all", "Do not ignore hidden entries and do not list implied . and ..", #ARGV_NONE)
-RegisterLongOption("debug", "Display some debugging informations and exit", #ARGV_NONE)
-RegisterShortOption('d', "Sorts directory content by putting the folders on top/at the beginning", #ARGV_NONE)
-RegisterShortOption('D', "Sorts directory content by putting the folders at the bottom/at the end", #ARGV_NONE)
-RegisterCompleteOption('F', "classify", "Append indicator (one of */=>@|) to entries", #ARGV_NONE)
-RegisterCompleteOption('h', "human-readable", "With -l and/or -s, print human readable sizes (e.g., 1kB 234MB 2GB)", #ARGV_NONE)
-RegisterCompleteOption('k', "kibibytes", "With -l and/or -s, default to 1024-byte blocks for disk usage and print ", #ARGV_NONE)
+RegisterCompleteOption('a', "all", "Do not ignore hidden entries and/or entries starting with .", #ARG_VALUE_NONE)
+RegisterCompleteOption('A', "almost-all", "Do not ignore hidden entries and do not list implied . and ..", #ARG_VALUE_NONE)
+RegisterLongOption("debug", "Display some debugging informations and exit", #ARG_VALUE_NONE)
+RegisterShortOption('d', "Sorts directory content by putting the folders on top/at the beginning", #ARG_VALUE_NONE)
+RegisterShortOption('D', "Sorts directory content by putting the folders at the bottom/at the end", #ARG_VALUE_NONE)
+RegisterCompleteOption('F', "classify", "Append indicator (one of */=>@|) to entries", #ARG_VALUE_NONE)
+RegisterCompleteOption('h', "human-readable", "With -l and/or -s, print human readable sizes (e.g., 1kB 234MB 2GB)", #ARG_VALUE_NONE)
+RegisterCompleteOption('k', "kibibytes", "With -l and/or -s, default to 1024-byte blocks for disk usage and print ", #ARG_VALUE_NONE)
 
-RegisterCompleteOption('l', "list", "Use a long listing format", #ARGV_NONE)
-RegisterCompleteOption('m', "comma", "Fill width with a comma separated list of entries", #ARGV_NONE)
-RegisterCompleteOption('p', "indicator-style", "Unfinished: Append / indicator to directories", #ARGV_NONE)
-RegisterCompleteOption('R', "recursive", "List subdirectories recursively", #ARGV_NONE)
+RegisterCompleteOption('l', "list", "Use a long listing format", #ARG_VALUE_NONE)
+RegisterCompleteOption('m', "comma", "Fill width with a comma separated list of entries", #ARG_VALUE_NONE)
+RegisterCompleteOption('p', "indicator-style", "Unfinished: Append / indicator to directories", #ARG_VALUE_NONE)
+RegisterCompleteOption('R', "recursive", "List subdirectories recursively", #ARG_VALUE_NONE)
 
-RegisterLongOption("show-control-chars", "TEMP: Used to prevent some aliases errors.", #ARGV_NONE)
-;RegisterLongOption("","", #ARGV_NONE)
-RegisterLongOption("help", "Display this help and exit", #ARGV_NONE)
-RegisterLongOption("version", "Output version information and exit", #ARGV_NONE)
+RegisterLongOption("show-control-chars", "TEMP: Used to prevent some aliases errors.", #ARG_VALUE_NONE)
+;RegisterLongOption("","", #ARG_VALUE_NONE)
+RegisterLongOption("help", "Display this help and exit", #ARG_VALUE_NONE)
+RegisterLongOption("version", "Output version information and exit", #ARG_VALUE_NONE)
 
 ;
 ;- Variables Setup
@@ -232,7 +232,7 @@ EndProcedure
 ;- Others
 ;
 
-Procedure ProcessDirectory(Path.s, CurrentDepth.i)
+Procedure ProcessDirectory(Path.s, CurrentDepth.i=0)
 	Debug "Processing "+Path+" at depth "+CurrentDepth
 	If CurrentDepth > MaxRecursionDepth
 		ProcedureReturn
@@ -352,7 +352,7 @@ EndProcedure
 ;
 
 Debug "Parsing arguments..."
-ParseArguments(#ARG_UNIX)
+ParseArguments(#ARG_PREFIX_UNIX)
 Debug "Arguments parsed !"
 
 Debug "Reading arguments"
@@ -408,13 +408,71 @@ If IsOptionUsed("R")
 EndIf
 Debug "Arguments read !"
 
-ProcessDirectory(".\", 0)
+; This part will be revamped when non-flags arguments will be supported in cli-args
+; cli-args shits out a usage error if a / is used inside the path.
+; If CountProgramParameters() > 0 And Left(ProgramParameter(CountProgramParameters()-1), 1) <> "-"
+; 	Path.s = ProgramParameter(CountProgramParameters()-1)
+; 	
+; 	If CreateRegularExpression(1, "^[A-Za-z]:[\\|\/].*")
+; 		Debug "Full path regex created at 1"
+; 	Else
+; 		PrintN("Unable to create regex for path checking.")
+; 		End 1
+; 	EndIf
+; 	
+; 	If Not MatchRegularExpression(1, Path)
+; 		Path = ".\"+Path
+; 	EndIf
+; 	
+; 	Path = ReplaceString(Path, "/", "\")
+; 	If Right(Path, 1) <> "\"
+; 		Path = Path+"\"
+; 	EndIf
+; 	
+; 	ProcessDirectory(Path, 0)
+; Else
+; 	ProcessDirectory(".\", 0)
+; EndIf
 
-;Debug "Waiting for user input"
-;name$=Input()
+If ListSize(TextArgs())
+	PassNumber.b = 0
+	
+	ForEach TextArgs()
+		Path.s = TextArgs()
+		
+		If CreateRegularExpression(1, "^[A-Za-z]:[\\|\/].*")
+			Debug "Full path regex created at 1"
+		Else
+			PrintN("Unable to create regex for path checking.")
+			End 1
+		EndIf
+		
+		If Not MatchRegularExpression(1, Path)
+			Path = ".\"+Path
+		EndIf
+		
+		Path = ReplaceString(Path, "/", "\")
+		If Right(Path, 1) <> "\"
+			Path = Path+"\"
+		EndIf
+		
+		; Couldn't find the right constant for newlines
+		If PassNumber
+			PrintN("")
+			PrintN("")
+		EndIf
+		
+		ProcessDirectory(Path)
+		
+		PassNumber = PassNumber +1
+	Next
+Else
+	ProcessDirectory(".\")
+EndIf
+
 
 ; IDE Options = PureBasic 5.50 (Windows - x64)
-; CursorPosition = 362
-; FirstLine = 348
+; CursorPosition = 461
+; FirstLine = 442
 ; Folding = -
 ; EnableXP
