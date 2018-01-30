@@ -1,33 +1,41 @@
-﻿;
+﻿; The spacing before filesizes when using -lh is fucked and uses the one from without it
+
+;
 ;- Setup
 ;
+CompilerIf Not #PB_Compiler_OS = #PB_OS_Windows
+	CompilerError "This program uses some windows specific code."
+	CompilerError "Why would you compile it on other platforms anyway, it's not like they are stuck in the DOS days like windows..."
+	CompilerError "And by the way, the Powershell version of ls looks like shit."
+CompilerEndIf
 
 If Not OpenConsole()
-	;TODO: Play error sound ?
+	MessageBeep_(#MB_ICONEXCLAMATION)
 	End 1
 EndIf
 
 XIncludeFile "cli-args-pb\cli-args.pb"
 
-;TODO: Fix the desc. for a and A.
-RegisterCompleteOption('a', "all", "Do not ignore hidden entries and/or entries starting with .", #ARG_VALUE_NONE)
-RegisterCompleteOption('A', "almost-all", "Do not ignore hidden entries and do not list implied . and ..", #ARG_VALUE_NONE)
-RegisterLongOption("debug", "Display some debugging informations and exit", #ARG_VALUE_NONE)
-RegisterShortOption('d', "Sorts directory content by putting the folders on top/at the beginning", #ARG_VALUE_NONE)
-RegisterShortOption('D', "Sorts directory content by putting the folders at the bottom/at the end", #ARG_VALUE_NONE)
-RegisterCompleteOption('F', "classify", "Append indicator (one of */=>@|) to entries", #ARG_VALUE_NONE)
-RegisterCompleteOption('h', "human-readable", "With -l and/or -s, print human readable sizes (e.g., 1kB 234MB 2GB)", #ARG_VALUE_NONE)
-RegisterCompleteOption('k', "kibibytes", "With -l and/or -s, default to 1024-byte blocks for disk usage and print ", #ARG_VALUE_NONE)
+;TODO: Fix the desc. for a and A., and F too
+RegisterCompleteOption('a', "all", "Do not ignore hidden entries and/or entries starting with .")
+RegisterCompleteOption('A', "almost-all", "Do not ignore hidden entries and do not list implied . and ..")
+RegisterLongOption("debug", "Display some debugging informations and exit")
+RegisterShortOption('d', "Sorts directory content by putting the folders on top/at the beginning")
+RegisterShortOption('D', "Sorts directory content by putting the folders at the bottom/at the end")
+RegisterCompleteOption('F', "classify", "Append indicator (one of */=>@|) to entries")
+RegisterCompleteOption('h', "human-readable", "With -l and/or -s, print human readable sizes (e.g., 1kB 234MB 2GB)")
+RegisterCompleteOption('k', "kibibytes", "With -l and/or -s, default to 1024-byte blocks for disk usage and print ")
 
-RegisterCompleteOption('l', "list", "Use a long listing format", #ARG_VALUE_NONE)
-RegisterCompleteOption('m', "comma", "Fill width with a comma separated list of entries", #ARG_VALUE_NONE)
-RegisterCompleteOption('p', "indicator-style", "Unfinished: Append / indicator to directories", #ARG_VALUE_NONE)
-RegisterCompleteOption('R', "recursive", "List subdirectories recursively", #ARG_VALUE_NONE)
+RegisterCompleteOption('l', "list", "Use a long listing format")
+RegisterCompleteOption('m', "comma", "Fill width with a comma separated list of entries")
+RegisterCompleteOption('p', "indicator-style", "Unfinished: Append / indicator to directories")
+RegisterCompleteOption('R', "recursive", "List subdirectories recursively")
 
-RegisterLongOption("show-control-chars", "TEMP: Used to prevent some aliases errors.", #ARG_VALUE_NONE)
-;RegisterLongOption("","", #ARG_VALUE_NONE)
-RegisterLongOption("help", "Display this help and exit", #ARG_VALUE_NONE)
-RegisterLongOption("version", "Output version information and exit", #ARG_VALUE_NONE)
+; What the fuck was that option.
+RegisterLongOption("show-control-chars", "TEMP: Used to prevent some aliases errors.")
+
+RegisterLongOption("help", "Display this help and exit")
+RegisterLongOption("version", "Output version information and exit")
 
 ;
 ;- Variables Setup
@@ -36,6 +44,7 @@ RegisterLongOption("version", "Output version information and exit", #ARG_VALUE_
 ; Constants
 #SectionSpacing = 2
 #MonthStr = "JanFebMarAprMayJunJulAugSepOctNovDec"
+;#MonthStr = "JanFévMarAvrMaiJunJulAouSepOctNovDéc"
 #ExecRegex = "^(bat|c(md|om|pl)|exe|gadget|i(ns|ns|su)|j(ob|se)|ms[cipt]|p(if|af|s1)|r(eg|gs)|s(ct|hh|hs)|u3p|vb(e|s(cript)?)?|wsf?)$"
 #FileSizeUnitBasic = "B  KB MB GB TB PB EB ZB YB "
 #FileSizeUnitKibib = "B  KiBMiBGiBTiBPiBEiBZiBYiB"
@@ -83,17 +92,35 @@ Else
 	PrintN("A fatal error occured while setting up stuff, now exiting...")
 	Debug RegularExpressionError()
 	PrintN(RegularExpressionError())
+	MessageBeep_(#MB_ICONEXCLAMATION)
 	End 1
 EndIf
 
+;Procedures-Prototypes
+
+;
+;- Macros
+;
+
+; Source: http://www.purebasic.fr/english/viewtopic.php?f=12&t=42713
+Macro ConsoleHandle()
+	GetStdHandle_(#STD_OUTPUT_HANDLE)
+EndMacro
 
 ;
 ;- Procedures
 ;
 
+; Source: https://rosettacode.org/wiki/Terminal_control/Dimensions#PureBasic
+Procedure GetConsoleWidth()
+	Protected CBI.CONSOLE_SCREEN_BUFFER_INFO
+	Protected hConsole = ConsoleHandle()
+	GetConsoleScreenBufferInfo_(hConsole, @CBI)
+	ProcedureReturn CBI\srWindow\right - CBI\srWindow\left + 1
+EndProcedure
+
 Procedure.s GetFormattedSize(FileSize.i)
 	UnitSizeIndex.b = 0
-	;FileSizeDivider
 	
 	While FileSize >= FileSizeDivider
 		UnitSizeIndex = UnitSizeIndex + 1
@@ -148,20 +175,51 @@ Procedure PrintFormattedName(FileName.s, Extension.s, FileType.i, Spacing.i=-1)
 	EndIf
 EndProcedure
 
+; Prints the given path with colors.
+Procedure PrintPath(Path.s)
+	PrintN("")
+	ConsoleColor(3, 0)
+	PrintN(Path+":")	
+	ConsoleColor(15, 0)
+EndProcedure
+
 Procedure PrintBasicDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry(), LongestName.i)
-	; Unable to find a way to get the terminal size.
-	PrintN("Please use the -l option")
+	; Printing current path if recursive mode is enabled
+	If CurrentDepth > 0
+		PrintPath(Path)
+	EndIf
+	
+	MaxFilesPerLine.i = 0
+	
+	While True
+		If (LongestName+#SectionSpacing)*MaxFilesPerLine > GetConsoleWidth()
+			Break
+		EndIf
+		MaxFilesPerLine = MaxFilesPerLine + 1
+	Wend
+	
+	iCurrentEntryLinePos.i = 0
+	ForEach Entries()
+		If iCurrentEntryLinePos > MaxFilesPerLine
+			iCurrentEntryLinePos = 0
+			PrintN("")
+		EndIf
+		
+		If Not iCurrentEntryLinePos
+			Print(" ")
+		EndIf
+		
+		PrintFormattedName(Entries()\Name, Entries()\Extension, Entries()\Type)
+		Print(Space(LongestName - Len(Entries()\Name) - AddExtraFileTypeStuff))
+		
+		iCurrentEntryLinePos = iCurrentEntryLinePos + 1
+	Next
 EndProcedure
 
 Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
-	;
 	; Printing current path if recursive mode is enabled
-	; La condition après le AND est peut-être inutile
-	If CurrentDepth > 0 ;And MaxRecursionDepth > 0
-		PrintN("")
-		ConsoleColor(3, 0)
-		PrintN(Path+":")	
-		ConsoleColor(15, 0)
+	If CurrentDepth > 0
+		PrintPath(Path)
 	EndIf
 	
 	; Calculating size section width
@@ -170,7 +228,7 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 	ForEach Entries()
 		If UseHumanFileSize
 			If Len(GetFormattedSize(Entries()\Size)) > MaxSizeLength
-				MaxSizeLength = Len(StrU(Entries()\Size))
+				MaxSizeLength = Len(GetFormattedSize(Entries()\Size))
 			EndIf
 		Else
 			If Len(StrU(Entries()\Size)) > MaxSizeLength
@@ -207,7 +265,6 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 			Print("-")
 		EndIf
 		
-		; TODO: Seems to make a spacing of 1 between the flag and size section if kibibytes are used
 		; Size Section
 		If UseHumanFileSize
 			Print(Space(MaxSizeLength - Len(GetFormattedSize(Entries()\Size)) + #SectionSpacing))
@@ -300,8 +357,8 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i=0)
 				*ListPointer\Extension = GetExtensionPart(*ListPointer\Name)
 			EndIf
 			
-			If Len(*ListPointer\Name) > LongestName
-				LongestName = Len(*ListPointer\Name)
+			If Len(*ListPointer\Name)+AddExtraFileTypeStuff > LongestName
+				LongestName = Len(*ListPointer\Name)+AddExtraFileTypeStuff
 			EndIf
 		Wend
 		
@@ -338,9 +395,10 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i=0)
 	Else
 		Debug "Unable to examine "+Path
 		If CurrentDepth = 0
-			PrintN("Unable to walk trough "+Path)
+			PrintN("Unable to find the following folder: "+Path)
 			PrintN("Make sure that you entered the path correctly.")
-			;TODO: Exit
+			; Doesn't seem to play, even if the text is printed.
+			MessageBeep_(#MB_ICONEXCLAMATION)
 		EndIf
 	EndIf
 	
@@ -348,7 +406,7 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i=0)
 EndProcedure
 
 ;
-;- IDK 
+;- Arguments Reading
 ;
 
 Debug "Parsing arguments..."
@@ -360,7 +418,7 @@ If IsOptionUsed("help")
 	PrintHelpText()
 	End
 ElseIf IsOptionUsed("version")
-	PrintN("cli-ls v"+#PB_Editor_FileVersionNumeric+" x64 - ("+FormatDate("%dd/%mm/%yyyy %hh:%ii:%ss GMT", #PB_Compiler_Date)+")")
+	PrintN("cli-ls v"+#PB_Editor_FileVersionNumeric+" x64 - (Compilation date:"+FormatDate("%dd/%mm/%yyyy %hh:%ii:%ss GMT", #PB_Compiler_Date)+")")
 	End
 EndIf
 
@@ -403,49 +461,28 @@ ElseIf IsOptionUsed("D")
 EndIf
 
 If IsOptionUsed("R")
-	; 500 should be enough with the 260 path length limit on windows but I let it at 9999 to be safe in the future.
+	; 500 should be enough with the 260 path length limit on windows but I let it at 9999 to be a bit more future proof.
 	MaxRecursionDepth = 9999
 EndIf
 Debug "Arguments read !"
 
-; This part will be revamped when non-flags arguments will be supported in cli-args
-; cli-args shits out a usage error if a / is used inside the path.
-; If CountProgramParameters() > 0 And Left(ProgramParameter(CountProgramParameters()-1), 1) <> "-"
-; 	Path.s = ProgramParameter(CountProgramParameters()-1)
-; 	
-; 	If CreateRegularExpression(1, "^[A-Za-z]:[\\|\/].*")
-; 		Debug "Full path regex created at 1"
-; 	Else
-; 		PrintN("Unable to create regex for path checking.")
-; 		End 1
-; 	EndIf
-; 	
-; 	If Not MatchRegularExpression(1, Path)
-; 		Path = ".\"+Path
-; 	EndIf
-; 	
-; 	Path = ReplaceString(Path, "/", "\")
-; 	If Right(Path, 1) <> "\"
-; 		Path = Path+"\"
-; 	EndIf
-; 	
-; 	ProcessDirectory(Path, 0)
-; Else
-; 	ProcessDirectory(".\", 0)
-; EndIf
+;
+;- Main Loop
+;
 
+; The old version of the following block of code was removed, check the previous commit if you need it.
 If ListSize(TextArgs())
 	PassNumber.b = 0
+		
+	If CreateRegularExpression(1, "^[A-Za-z]:[\\|\/].*")
+		Debug "Full path regex created at 1"
+	Else
+		PrintN("Unable to create regex for path checking.")
+		End 1
+	EndIf
 	
 	ForEach TextArgs()
 		Path.s = TextArgs()
-		
-		If CreateRegularExpression(1, "^[A-Za-z]:[\\|\/].*")
-			Debug "Full path regex created at 1"
-		Else
-			PrintN("Unable to create regex for path checking.")
-			End 1
-		EndIf
 		
 		If Not MatchRegularExpression(1, Path)
 			Path = ".\"+Path
@@ -456,10 +493,12 @@ If ListSize(TextArgs())
 			Path = Path+"\"
 		EndIf
 		
-		; Couldn't find the right constant for newlines
-		If PassNumber
-			PrintN("")
-			PrintN("")
+		; Adds a spacing between listings if multiple folders where given in the arguments, and prints the path
+		If ListSize(TextArgs()) >= 2
+			If PassNumber
+				PrintN("")
+			EndIf
+			PrintPath(Path)
 		EndIf
 		
 		ProcessDirectory(Path)
@@ -470,9 +509,9 @@ Else
 	ProcessDirectory(".\")
 EndIf
 
-
-; IDE Options = PureBasic 5.50 (Windows - x64)
-; CursorPosition = 461
-; FirstLine = 442
-; Folding = -
+; IDE Options = PureBasic 5.60 (Windows - x86)
+; CursorPosition = 212
+; FirstLine = 208
+; Folding = --
 ; EnableXP
+; CompileSourceDirectory

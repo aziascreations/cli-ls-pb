@@ -1,44 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.50 (Windows - x64)">
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 5.60 (Windows - x86)">
   <section name="config">
     <options closefiles="1" openmode="0" name="cli-ls"/>
   </section>
   <section name="data">
     <explorer view="C:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2017-10-20 08:19" user="Herwin" host="DESKTOP-UAKS81M"/>
+    <lastopen date="2018-01-30 02:09" user="Herwin" host="DESKTOP-UAKS81M"/>
   </section>
   <section name="files">
     <file name="cli-args-pb\cli-args.pb">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="++"/>
+      <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
       <fingerprint md5="d35bb808628f4244ceaad3faa2456329"/>
     </file>
     <file name="ls.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="ba2d89152208e46da36708e9cb1a60a9"/>
+      <fingerprint md5="51c1e784aeb116656b826e8e18bb2434"/>
     </file>
   </section>
   <section name="targets">
     <target name="Default Target" enabled="1" default="1">
       <inputfile value=".\ls.pb"/>
       <outputfile value="..\bin\x64\ls.exe"/>
-      <compiler version="PureBasic 5.50 (Windows - x64)"/>
+      <compiler version="PureBasic 5.60 (Windows - x64)"/>
       <commandline value="-lFd d:/Temp c:\"/>
       <executable value="..\bin\x64\ls.exe"/>
       <options xpskin="1" debug="1"/>
       <temporaryexe value="source"/>
       <format exe="console" cpu="0"/>
-      <compilecount enable="1" value="153"/>
-      <buildcount enable="1" value="25"/>
+      <compilecount enable="1" value="170"/>
+      <buildcount enable="1" value="38"/>
       <versioninfo enable="1">
         <field0 value="1.2.%BUILDCOUNT.%COMPILECOUNT"/>
         <field1 value="1.2.%BUILDCOUNT.%COMPILECOUNT"/>
         <field3 value="cli-ls"/>
         <field7 value="cli-ls-pb"/>
         <field8 value="ls.exe"/>
-        <field9 value="Copyright © Herwin Bozet 2017"/>
+        <field9 value="Copyright © Herwin Bozet 2017-2018"/>
         <field14 value="https://github.com/aziascreations/cli-ls-pb"/>
+        <field17 value="0809 English (United Kingdom)"/>
       </versioninfo>
     </target>
   </section>
