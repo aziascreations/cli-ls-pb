@@ -27,6 +27,7 @@ RegisterCompleteOption('h', "human-readable", "With -l and/or -s, print human re
 RegisterCompleteOption('k', "kibibytes", "With -l and/or -s, default to 1024-byte blocks for disk usage and print ")
 
 RegisterCompleteOption('l', "list", "Use a long listing format")
+RegisterCompleteOption('L', "list-pipe", "Use a pipable listing format")
 RegisterCompleteOption('m', "comma", "Fill width with a comma separated list of entries")
 RegisterCompleteOption('p', "indicator-style", "Unfinished: Append / indicator to directories")
 RegisterCompleteOption('R', "recursive", "List subdirectories recursively")
@@ -64,6 +65,7 @@ Global DebugMode.b = #False	 ; -d/--debug thingy
 ; 0 - Simple list(default)
 ; 1 - Commas separated list
 ; 2 - Pretty / list
+; 3 - Pipable List (-L)
 Global DirectoryDisplayMode.b = 0; -c/-l thingy
 
 ; The #PB_DirectoryEntry constants will be used to set this variable
@@ -181,6 +183,12 @@ Procedure PrintPath(Path.s)
 	ConsoleColor(3, 0)
 	PrintN(Path+":")	
 	ConsoleColor(15, 0)
+EndProcedure
+
+Procedure PrintPipableDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
+	ForEach Entries()
+		PrintN(Path + Entries()\Name)
+	Next
 EndProcedure
 
 Procedure PrintBasicDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry(), LongestName.i)
@@ -378,6 +386,8 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i=0)
 		; Printing directory's content
 		If DirectoryDisplayMode = 2
 			PrintPrettyDirectory(Path, CurrentDepth, Entries())
+		ElseIf DirectoryDisplayMode = 3
+			PrintPipableDirectory(Path, CurrentDepth, Entries())
 		Else
 			PrintBasicDirectory(Path, CurrentDepth, Entries(), LongestName)
 		EndIf
@@ -452,6 +462,8 @@ If IsOptionUsed("l")
 	DirectoryDisplayMode = 2
 ElseIf IsOptionUsed("m")
 	DirectoryDisplayMode = 1
+ElseIf IsOptionUsed("L")
+	DirectoryDisplayMode = 3
 EndIf
 
 If IsOptionUsed("d")
@@ -494,7 +506,7 @@ If ListSize(TextArgs())
 		EndIf
 		
 		; Adds a spacing between listings if multiple folders where given in the arguments, and prints the path
-		If ListSize(TextArgs()) >= 2
+		If ListSize(TextArgs()) >= 2 And DirectoryDisplayMode <> 3
 			If PassNumber
 				PrintN("")
 			EndIf
@@ -510,8 +522,8 @@ Else
 EndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 212
-; FirstLine = 208
+; CursorPosition = 508
+; FirstLine = 488
 ; Folding = --
 ; EnableXP
 ; CompileSourceDirectory

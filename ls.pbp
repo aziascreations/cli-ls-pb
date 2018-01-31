@@ -7,7 +7,7 @@
   <section name="data">
     <explorer view="C:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2018-01-30 02:09" user="Herwin" host="DESKTOP-UAKS81M"/>
+    <lastopen date="2018-01-31 17:08" user="Herwin" host="DESKTOP-UAKS81M"/>
   </section>
   <section name="files">
     <file name="cli-args-pb\cli-args.pb">
@@ -16,7 +16,7 @@
     </file>
     <file name="ls.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="51c1e784aeb116656b826e8e18bb2434"/>
+      <fingerprint md5="9ddbf2bab2d53de72640a01231610ab5"/>
     </file>
   </section>
   <section name="targets">
@@ -29,11 +29,11 @@
       <options xpskin="1" debug="1"/>
       <temporaryexe value="source"/>
       <format exe="console" cpu="0"/>
-      <compilecount enable="1" value="170"/>
-      <buildcount enable="1" value="38"/>
+      <compilecount enable="1" value="171"/>
+      <buildcount enable="1" value="39"/>
       <versioninfo enable="1">
-        <field0 value="1.2.%BUILDCOUNT.%COMPILECOUNT"/>
-        <field1 value="1.2.%BUILDCOUNT.%COMPILECOUNT"/>
+        <field0 value="1.3.%BUILDCOUNT.%COMPILECOUNT"/>
+        <field1 value="1.3.%BUILDCOUNT.%COMPILECOUNT"/>
         <field3 value="cli-ls"/>
         <field7 value="cli-ls-pb"/>
         <field8 value="ls.exe"/>
