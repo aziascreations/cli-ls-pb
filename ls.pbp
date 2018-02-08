@@ -7,7 +7,7 @@
   <section name="data">
     <explorer view="C:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2018-01-31 17:08" user="Herwin" host="DESKTOP-UAKS81M"/>
+    <lastopen date="2018-02-08 13:43" user="Herwin" host="DESKTOP-UAKS81M"/>
   </section>
   <section name="files">
     <file name="cli-args-pb\cli-args.pb">
@@ -16,7 +16,7 @@
     </file>
     <file name="ls.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="9ddbf2bab2d53de72640a01231610ab5"/>
+      <fingerprint md5="03838ce148377dc88c9833855b038349"/>
     </file>
   </section>
   <section name="targets">
@@ -24,13 +24,13 @@
       <inputfile value=".\ls.pb"/>
       <outputfile value="..\bin\x64\ls.exe"/>
       <compiler version="PureBasic 5.60 (Windows - x64)"/>
-      <commandline value="-lFd d:/Temp c:\"/>
+      <commandline value="D:\Developement\Purebasic\ls"/>
       <executable value="..\bin\x64\ls.exe"/>
       <options xpskin="1" debug="1"/>
       <temporaryexe value="source"/>
       <format exe="console" cpu="0"/>
-      <compilecount enable="1" value="171"/>
-      <buildcount enable="1" value="39"/>
+      <compilecount enable="1" value="185"/>
+      <buildcount enable="1" value="42"/>
       <versioninfo enable="1">
         <field0 value="1.3.%BUILDCOUNT.%COMPILECOUNT"/>
         <field1 value="1.3.%BUILDCOUNT.%COMPILECOUNT"/>

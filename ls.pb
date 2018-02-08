@@ -141,6 +141,7 @@ EndProcedure
 Procedure PrintFormattedName(FileName.s, Extension.s, FileType.i, Spacing.i=-1)
 	If Spacing > 0
 		; Add spaces and shit
+		; What ?, why is this even here ?
 	EndIf
 	
 	Debug "Ext: "+Extension
@@ -169,12 +170,12 @@ Procedure PrintFormattedName(FileName.s, Extension.s, FileType.i, Spacing.i=-1)
 		EndIf
 	EndIf
 	
-	If Spacing > 0
-		; Add spaces and shit
-		
-	Else
-		PrintN("")
-	EndIf
+; 	If Spacing > 0
+; 		; Add spaces and shit
+; 		
+; 	Else
+; 		;PrintN("")
+; 	EndIf
 EndProcedure
 
 ; Prints the given path with colors.
@@ -191,6 +192,7 @@ Procedure PrintPipableDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 	Next
 EndProcedure
 
+; TODO: Fix the missing spaces after the names, and add a condition for file extension stuff.
 Procedure PrintBasicDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry(), LongestName.i)
 	; Printing current path if recursive mode is enabled
 	If CurrentDepth > 0
@@ -199,16 +201,14 @@ Procedure PrintBasicDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry(), L
 	
 	MaxFilesPerLine.i = 0
 	
-	While True
-		If (LongestName+#SectionSpacing)*MaxFilesPerLine > GetConsoleWidth()
-			Break
-		EndIf
-		MaxFilesPerLine = MaxFilesPerLine + 1
-	Wend
+	MaxFilesPerLine = Round(GetConsoleWidth() / (LongestName + #SectionSpacing), #PB_Round_Down)
+	Debug "ConsoleWidth: " + GetConsoleWidth()
+	Debug "LongestName:" + LongestName + #SectionSpacing
+	Debug "MaxFilesPerLine: "+MaxFilesPerLine
 	
 	iCurrentEntryLinePos.i = 0
 	ForEach Entries()
-		If iCurrentEntryLinePos > MaxFilesPerLine
+		If iCurrentEntryLinePos >= MaxFilesPerLine
 			iCurrentEntryLinePos = 0
 			PrintN("")
 		EndIf
@@ -290,6 +290,7 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 		;File name section
 		Print(Space(#SectionSpacing))
 		PrintFormattedName(Entries()\Name, Entries()\Extension, Entries()\Type)
+		PrintN("") ; Added here because it was removed in the PrintFormattedName procedure.
 	Next
 EndProcedure
 
@@ -522,8 +523,10 @@ Else
 EndIf
 
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 508
-; FirstLine = 488
+; CursorPosition = 194
+; FirstLine = 188
 ; Folding = --
 ; EnableXP
 ; CompileSourceDirectory
+; EnableCompileCount = 0
+; EnableBuildCount = 0
