@@ -1,12 +1,17 @@
 ﻿; The spacing before filesizes when using -lh is fucked and uses the one from without it
 
+; TODO: When cli-args will allow procedure "redefinition", create custom help and usage error procedures.
+
+; TODO: Fix the desc. For a And A., And F too
+
 ;
-;- Setup
-;
+;- Setup - Compiler
+;{
+
 CompilerIf Not #PB_Compiler_OS = #PB_OS_Windows
 	CompilerError "This program uses some windows specific code."
 	CompilerError "Why would you compile it on other platforms anyway, it's not like they are stuck in the DOS days like windows..."
-	CompilerError "And by the way, the Powershell version of ls looks like shit."
+	CompilerError "And by the way, the Powershell version of ls looks like shit and is confusing as fuck."
 CompilerEndIf
 
 If Not OpenConsole()
@@ -14,41 +19,50 @@ If Not OpenConsole()
 	End 1
 EndIf
 
+;}
+
+;
+;- Setup - Lang & Arguments
+;{
+
+XIncludeFile "./lang.pb"
+LoadLanguage(GetPathPart(ProgramFilename())+GetFilePart(ProgramFilename(), #PB_FileSystem_NoExtension)+".lang")
+
 XIncludeFile "cli-args-pb\cli-args.pb"
-
-;TODO: Fix the desc. for a and A., and F too
-RegisterCompleteOption('a', "all", "Do not ignore hidden entries and/or entries starting with .")
-RegisterCompleteOption('A', "almost-all", "Do not ignore hidden entries and do not list implied . and ..")
-RegisterLongOption("debug", "Display some debugging informations and exit")
-RegisterShortOption('d', "Sorts directory content by putting the folders on top/at the beginning")
-RegisterShortOption('D', "Sorts directory content by putting the folders at the bottom/at the end")
-RegisterCompleteOption('F', "classify", "Append indicator (one of */=>@|) to entries")
-RegisterCompleteOption('h', "human-readable", "With -l and/or -s, print human readable sizes (e.g., 1kB 234MB 2GB)")
-RegisterCompleteOption('k', "kibibytes", "With -l and/or -s, default to 1024-byte blocks for disk usage and print ")
-
-RegisterCompleteOption('l', "list", "Use a long listing format")
-RegisterCompleteOption('L', "list-pipe", "Use a pipable listing format")
-RegisterCompleteOption('m', "comma", "Fill width with a comma separated list of entries")
-RegisterCompleteOption('p', "indicator-style", "Unfinished: Append / indicator to directories")
-RegisterCompleteOption('R', "recursive", "List subdirectories recursively")
+RegisterCompleteOption('a', "all", Language("ArgsDesc", "all"))
+RegisterCompleteOption('A', "almost-all", Language("ArgsDesc", "almost-all"))
+RegisterLongOption("debug", Language("ArgsDesc", "debug"))
+RegisterShortOption('d', Language("ArgsDesc", "sort-d"))
+RegisterShortOption('D', Language("ArgsDesc", "sort-D"))
+RegisterCompleteOption('F', "classify", Language("ArgsDesc", "classify"))
+RegisterCompleteOption('h', "human-readable", Language("ArgsDesc", "human-readable"))
+RegisterCompleteOption('k', "kibibytes", Language("ArgsDesc", "kibibytes"))
+RegisterCompleteOption('l', "list", Language("ArgsDesc", "list-normal"))
+RegisterCompleteOption('L', "list-pipe", Language("ArgsDesc", "list-pipe"))
+RegisterShortOption('1', Language("ArgsDesc", "list-pipe"))
+RegisterCompleteOption('m', "comma", Language("ArgsDesc", "comma"))
+RegisterCompleteOption('p', "indicator-style", Language("ArgsDesc", "indicator-style"))
+RegisterCompleteOption('R', "recursive", Language("ArgsDesc", "recursive"))
 
 ; What the fuck was that option.
-RegisterLongOption("show-control-chars", "TEMP: Used to prevent some aliases errors.")
+RegisterLongOption("show-control-chars", Language("ArgsDesc", "show-control-chars"))
 
-RegisterLongOption("help", "Display this help and exit")
-RegisterLongOption("version", "Output version information and exit")
+RegisterLongOption("help", Language("ArgsDesc", "help"))
+RegisterLongOption("version", Language("ArgsDesc", "version"))
+
+;}
 
 ;
 ;- Variables Setup
-;
+;{
 
 ; Constants
 #SectionSpacing = 2
-#MonthStr = "JanFebMarAprMayJunJulAugSepOctNovDec"
-;#MonthStr = "JanFévMarAvrMaiJunJulAouSepOctNovDéc"
 #ExecRegex = "^(bat|c(md|om|pl)|exe|gadget|i(ns|ns|su)|j(ob|se)|ms[cipt]|p(if|af|s1)|r(eg|gs)|s(ct|hh|hs)|u3p|vb(e|s(cript)?)?|wsf?)$"
 #FileSizeUnitBasic = "B  KB MB GB TB PB EB ZB YB "
 #FileSizeUnitKibib = "B  KiBMiBGiBTiBPiBEiBZiBYiB"
+
+Global MonthStr.s = Language("Misc", "MonthStr")
 
 ; Flag variables
 ; 0 if recursion is disabled use another value for testing to avoid the .git folder and subfolders in reursive mode.
@@ -71,11 +85,11 @@ Global DirectoryDisplayMode.b = 0; -c/-l thingy
 ; The #PB_DirectoryEntry constants will be used to set this variable
 Global DirectorySortingMode.b = %00; -d/-D flag
 
-; Couldn't find a better way to do it...
 Global UseKibibytes.b = #False
 Global FileSizeDivider.i = 1000
 
 ; Other variables & stuff
+; TODO: indicate what it is used for.
 Global StepCounter.i = 12
 
 Structure DirEntry
@@ -91,27 +105,29 @@ Debug "Setting up regexes"
 If CreateRegularExpression(0, #ExecRegex)
 	Debug "Regex is love, regex is life"
 Else
-	PrintN("A fatal error occured while setting up stuff, now exiting...")
+	PrintN(Language("Errors", "ExecsRegex"))
 	Debug RegularExpressionError()
 	PrintN(RegularExpressionError())
 	MessageBeep_(#MB_ICONEXCLAMATION)
 	End 1
 EndIf
 
-;Procedures-Prototypes
+;}
 
 ;
 ;- Macros
-;
+;{
 
 ; Source: http://www.purebasic.fr/english/viewtopic.php?f=12&t=42713
 Macro ConsoleHandle()
 	GetStdHandle_(#STD_OUTPUT_HANDLE)
 EndMacro
 
+;}
+
 ;
 ;- Procedures
-;
+;{
 
 ; Source: https://rosettacode.org/wiki/Terminal_control/Dimensions#PureBasic
 Procedure GetConsoleWidth()
@@ -284,7 +300,7 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 		
 		; Modification date section
 		Print(Space(#SectionSpacing))
-		Print(Mid(#MonthStr, (Month(Entries()\Date)-1)*3+1, 3)+" "+FormatDate("%dd", Entries()\Date))
+		Print(Mid(MonthStr, (Month(Entries()\Date)-1)*3+1, 3)+" "+FormatDate("%dd", Entries()\Date))
 		Print(Space(#SectionSpacing) + FormatDate("%hh:%mm", Entries()\Date))
 		
 		;File name section
@@ -294,9 +310,11 @@ Procedure PrintPrettyDirectory(Path.s, CurrentDepth.i, List Entries.DirEntry())
 	Next
 EndProcedure
 
+;}
+
 ;
 ;- Others
-;
+;{
 
 Procedure ProcessDirectory(Path.s, CurrentDepth.i=0)
 	Debug "Processing "+Path+" at depth "+CurrentDepth
@@ -406,6 +424,7 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i=0)
 	Else
 		Debug "Unable to examine "+Path
 		If CurrentDepth = 0
+			; TODO: Add this in the localize thingy
 			PrintN("Unable to find the following folder: "+Path)
 			PrintN("Make sure that you entered the path correctly.")
 			; Doesn't seem to play, even if the text is printed.
@@ -416,9 +435,11 @@ Procedure ProcessDirectory(Path.s, CurrentDepth.i=0)
 	FreeList(Entries())
 EndProcedure
 
+;}
+
 ;
 ;- Arguments Reading
-;
+;{
 
 Debug "Parsing arguments..."
 ParseArguments(#ARG_PREFIX_UNIX)
@@ -429,7 +450,21 @@ If IsOptionUsed("help")
 	PrintHelpText()
 	End
 ElseIf IsOptionUsed("version")
-	PrintN("cli-ls v"+#PB_Editor_FileVersionNumeric+" x64 - (Compilation date:"+FormatDate("%dd/%mm/%yyyy %hh:%ii:%ss GMT", #PB_Compiler_Date)+")")
+	PrintN("cli-ls v"+#PB_Editor_FileVersionNumeric+" x64")
+	End
+ElseIf IsOptionUsed("debug")
+;	PrintN("-= Product Infos =-")
+	PrintN(" Product Name: cli-ls")
+	PrintN(" Product Version: v"+#PB_Editor_FileVersionNumeric+" x64")
+	PrintN(" Compilation date: "+FormatDate("%dd/%mm/%yyyy %hh:%ii:%ss GMT", #PB_Compiler_Date)+"")
+	PrintN(" Compiler Used: Purebasic Compiler v"+#PB_Compiler_Version)
+;	PrintN(" Executable CRC32: "+CRC32FileFingerprint(#PB_Compiler_Executable))
+; 	PrintN("")
+; 	PrintN("-= Environment Infos =-")
+; 	PrintN(" Operating System: "+OSVersion())
+; 	PrintN(" CPU: "+CPUName())
+; 	;PrintN(" : ")
+; 	PrintN(" Console size: "+GetConsoleWidth()+"x???")
 	End
 EndIf
 
@@ -459,11 +494,11 @@ If IsOptionUsed("k")
 	FileSizeDivider = 1024
 EndIf
 
-If IsOptionUsed("l")
+If IsOptionUsed("l") ; List (With flags, size, ...)
 	DirectoryDisplayMode = 2
-ElseIf IsOptionUsed("m")
+ElseIf IsOptionUsed("m") ; ???
 	DirectoryDisplayMode = 1
-ElseIf IsOptionUsed("L")
+ElseIf IsOptionUsed("L") Or IsOptionUsed("1") ; Pipable list
 	DirectoryDisplayMode = 3
 EndIf
 
@@ -479,9 +514,11 @@ If IsOptionUsed("R")
 EndIf
 Debug "Arguments read !"
 
+;}
+
 ;
 ;- Main Loop
-;
+;{
 
 ; The old version of the following block of code was removed, check the previous commit if you need it.
 If ListSize(TextArgs())
@@ -522,10 +559,47 @@ Else
 	ProcessDirectory(".\")
 EndIf
 
+;}
+
+;
+;- DataSections
+;{
+
+DataSection
+	Language:
+	Data$ "_GROUP_", "ArgsDesc"
+	Data$ "all", "Do not ignore hidden entries and/or entries starting with ."
+	Data$ "almost-all", "Do not ignore hidden entries and do not list implied . and .."
+	Data$ "debug", "Display some debugging informations and exit"
+	Data$ "sort-d", "Sorts directory content by putting the folders on top/beginning"
+	Data$ "sort-D", "Sorts directory content by putting the folders at the bottom/end"
+	Data$ "classify", "Append indicator (one of */=>@|) to entries"
+	Data$ "human-readable", "With -l and/or -s, print human readable sizes (e.g., 1kB 234MB 2GB)"
+	Data$ "kibibytes", "With -l and/or -s, default to 1024-byte blocks for disk usage and print [???]"
+	Data$ "list-normal", "Use a long listing format"
+	Data$ "list-pipe", "Use a pipable listing format"
+	Data$ "comma", "Fill width with a comma separated list of entries"
+	Data$ "indicator-style", "Unfinished: Append / indicator to directories"
+	Data$ "recursive", "List subdirectories recursively"
+	Data$ "show-control-chars", "TEMP: Used to prevent some aliases errors."
+	Data$ "help", "Display this help and exit"
+	Data$ "version", "Output version information and exit"
+	
+	Data$ "_GROUP_", "Misc"
+	Data$ "MonthStr", "JanFebMarAprMayJunJulAugSepOctNovDec"
+	
+	Data$ "_GROUP_", "Errors"
+	Data$ "ExecsRegex", "A fatal error occured while setting up stuff, now exiting..."
+	
+	Data$ "_END_", ""
+EndDataSection
+
+;}
+
 ; IDE Options = PureBasic 5.60 (Windows - x86)
-; CursorPosition = 194
-; FirstLine = 188
-; Folding = --
+; CursorPosition = 38
+; FirstLine = 27
+; Folding = ----
 ; EnableXP
 ; CompileSourceDirectory
 ; EnableCompileCount = 0

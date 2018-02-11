@@ -1,0 +1,23 @@
+﻿[ArgsDesc]
+all = Afficher tous les fichiers des répertoires, y  compris les fichiers commençant par un '.'
+almost-all = 
+debug = 
+sort-d = 
+sort-D = 
+classify = 
+human-readable = 
+kibibytes = 
+list-normal = 
+list-pipe = Présenter un fichier par ligne.
+comma = 
+indicator-style = 
+recursive = Afficher le contenu des sous-répertoires de manière récursive
+show-control-chars = 
+help = 
+version = 
+
+[Misc]
+MonthStr = JanFévMarAvrMaiJunJulAouSepOctNovDéc
+
+[Errors]
+ExecsRegex = Une erreur fatale est survenue lors de la création d'un regex...

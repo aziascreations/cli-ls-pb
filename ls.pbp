@@ -7,16 +7,32 @@
   <section name="data">
     <explorer view="C:\Program Files\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2018-02-08 13:43" user="Herwin" host="DESKTOP-UAKS81M"/>
+    <lastopen date="2018-02-11 21:08" user="Herwin" host="DESKTOP-UAKS81M"/>
   </section>
   <section name="files">
     <file name="cli-args-pb\cli-args.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" panelstate="++"/>
       <fingerprint md5="d35bb808628f4244ceaad3faa2456329"/>
     </file>
+    <file name="lang.pb">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate=""/>
+      <fingerprint md5="b7f867982f19dc2f142b69e1f8264562"/>
+    </file>
+    <file name="langs\defaults.lang">
+      <config load="0" scan="0" panel="1" warn="1" lastopen="1" panelstate=""/>
+      <fingerprint md5="9d8bbe082096648ec16d0aa7cc470447"/>
+    </file>
+    <file name="langs\fr\ls.lang">
+      <config load="0" scan="0" panel="1" warn="1" lastopen="1" panelstate=""/>
+      <fingerprint md5="8ca6bb08e05c31676706d0640f77e6e6"/>
+    </file>
+    <file name="langs\template.lang">
+      <config load="0" scan="0" panel="1" warn="1" lastopen="0" panelstate=""/>
+      <fingerprint md5="0cbb15522c7a7e71e1d2626b2b896c74"/>
+    </file>
     <file name="ls.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="1" panelstate="+"/>
-      <fingerprint md5="03838ce148377dc88c9833855b038349"/>
+      <fingerprint md5="5bcc87b2967c96211430d252c4551cc2"/>
     </file>
   </section>
   <section name="targets">
@@ -29,11 +45,11 @@
       <options xpskin="1" debug="1"/>
       <temporaryexe value="source"/>
       <format exe="console" cpu="0"/>
-      <compilecount enable="1" value="185"/>
-      <buildcount enable="1" value="42"/>
+      <compilecount enable="1" value="201"/>
+      <buildcount enable="1" value="52"/>
       <versioninfo enable="1">
-        <field0 value="1.3.%BUILDCOUNT.%COMPILECOUNT"/>
-        <field1 value="1.3.%BUILDCOUNT.%COMPILECOUNT"/>
+        <field0 value="1.4.%BUILDCOUNT.%COMPILECOUNT"/>
+        <field1 value="1.4.%BUILDCOUNT.%COMPILECOUNT"/>
         <field3 value="cli-ls"/>
         <field7 value="cli-ls-pb"/>
         <field8 value="ls.exe"/>

@@ -1,0 +1,23 @@
+﻿[ArgsDesc]
+all = Do not ignore hidden entries and/or entries starting with .
+almost-all = Do not ignore hidden entries and do not list implied . and ..
+debug = Display some debugging informations and exit
+sort-d = Sorts directory content by putting the folders on top/beginning
+sort-D = Sorts directory content by putting the folders at the bottom/end
+classify = Append indicator (one of */=>@|) to entries
+human-readable = With -l and/or -s, print human readable sizes (e.g., 1kB 234MB 2GB)
+kibibytes = With -l and/or -s, default to 1024-byte blocks for disk usage and print [???]
+list-normal = Use a long listing format
+list-pipe = Use a pipable listing format
+comma = Fill width with a comma separated list of entries
+indicator-style = Unfinished: Append / indicator to directories
+recursive = List subdirectories recursively
+show-control-chars = TEMP: Used to prevent some aliases errors.
+help = Display this help and exit
+version = Output version information and exit
+
+[Misc]
+MonthStr = JanFebMarAprMayJunJulAugSepOctNovDec
+
+[Errors]
+ExecsRegex = A fatal error occured while setting up stuff, now exiting...

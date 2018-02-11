@@ -1,0 +1,23 @@
+﻿[ArgsDesc]
+all = 
+almost-all = 
+debug = 
+sort-d = 
+sort-D = 
+classify = 
+human-readable = 
+kibibytes = 
+list-normal = 
+list-pipe = 
+comma = 
+indicator-style = 
+recursive = 
+show-control-chars = 
+help = 
+version = 
+
+[Misc]
+MonthStr = 
+
+[Errors]
+ExecsRegex = 
